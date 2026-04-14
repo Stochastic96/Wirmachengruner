@@ -7,37 +7,38 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
-    <!-- Sidebar Navigation -->
     <aside class="sidebar">
-      <h1>🌱 Receipt Vault</h1>
+      <h1>Receipt Vault</h1>
       <nav>
         <ul>
-          <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">📊 Dashboard</a></li>
-          <li><a href="/receipts" class="{% if request.path == '/receipts' %}active{% endif %}">📄 Receipts</a></li>
-          <li><a href="/settings" class="{% if request.path == '/settings' %}active{% endif %}">⚙️ Settings</a></li>
+          <li><a href="/" class="{% if request.path == '/' or request.path == '/dashboard' %}active{% endif %}">Home</a></li>
+          <li><a href="/profiles" class="{% if request.path == '/profiles' or request.path == '/settings' %}active{% endif %}">Profiles</a></li>
+          <li><a href="/receipts" class="{% if request.path == '/receipts' %}active{% endif %}">Receipts</a></li>
         </ul>
       </nav>
     </aside>
 
-    <!-- Header -->
     <header class="header">
       <div class="header-title">
         <h2>{% block page_title %}{% endblock %}</h2>
       </div>
       <div class="header-actions">
-        <button class="lang-toggle" id="lang-toggle">🌐 EN</button>
-        <div class="co2-badge">
-          <span id="co2-badge-text">🌍 0 kg CO2</span>
-        </div>
+        <button class="lang-toggle" id="lang-toggle" type="button">EN</button>
+        <div class="co2-badge"><span id="co2-badge-text">0 kg CO2</span></div>
       </div>
     </header>
 
-    <!-- Main Content -->
     <main class="main">
       <div class="container">
         {% block content %}{% endblock %}
       </div>
     </main>
+
+    <footer class="site-footer">
+      <a href="/impressum">Impressum</a>
+      <a href="/datenschutz">Datenschutz</a>
+      <span>Hinweis: Bitte rechtliche Inhalte durch Rechtsberatung fuer Ihr Unternehmen pruefen.</span>
+    </footer>
 
     <script src="{{ url_for('static', filename='i18n.js') }}"></script>
     <script src="{{ url_for('static', filename='common.js') }}"></script>

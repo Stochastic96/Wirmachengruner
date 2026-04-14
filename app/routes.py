@@ -1,8 +1,7 @@
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
-from flask import Blueprint, current_app, jsonify, render_template, request, send_file, make_response
-from flask_babel import gettext
+from flask import Blueprint, current_app, jsonify, make_response, render_template, request, send_file
 
 from .co2 import calculate_co2, get_co2_tips
 from .db import execute, fetch_all, fetch_one
@@ -18,7 +17,7 @@ def index():
 
 @bp.get("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    return render_template("index.html")
 
 
 @bp.get("/receipts")
@@ -26,21 +25,34 @@ def receipts_page():
     return render_template("receipts.html")
 
 
+@bp.get("/profiles")
+def profiles_page():
+    return render_template("settings.html")
+
+
 @bp.get("/settings")
 def settings_page():
     return render_template("settings.html")
 
 
+@bp.get("/impressum")
+def impressum_page():
+    return render_template("impressum.html")
+
+
+@bp.get("/datenschutz")
+def datenschutz_page():
+    return render_template("datenschutz.html")
+
+
 @bp.get("/api/stats")
 def get_stats():
-    """Get overview statistics including CO2 totals."""
-    rows = fetch_all("SELECT amount, currency, category, co2_kg FROM receipts")
-    
+    rows = fetch_all("SELECT amount, category, co2_kg FROM receipts")
+
     total_receipts = len(rows)
     total_spent = sum(r["amount"] for r in rows)
     total_co2 = sum(r["co2_kg"] or 0 for r in rows)
-    
-    # Category breakdown
+
     category_totals = {}
     for row in rows:
         cat = row["category"] or "Uncategorized"
@@ -49,23 +61,24 @@ def get_stats():
         category_totals[cat]["count"] += 1
         category_totals[cat]["amount"] += row["amount"]
         category_totals[cat]["co2"] += row["co2_kg"] or 0
-    
-    # Monthly totals (last 6 months)
+
     six_months_ago = (datetime.now() - timedelta(days=180)).isoformat()
     monthly_rows = fetch_all(
         "SELECT strftime('%Y-%m', created_at) as month, SUM(amount) as total, SUM(co2_kg) as co2 "
         "FROM receipts WHERE created_at > ? GROUP BY month ORDER BY month DESC LIMIT 6",
-        (six_months_ago,)
+        (six_months_ago,),
     )
-    
-    return jsonify({
-        "total_receipts": total_receipts,
-        "total_spent": round(total_spent, 2),
-        "total_co2": round(total_co2, 2),
-        "category_breakdown": category_totals,
-        "monthly_stats": [dict(r) for r in monthly_rows],
-        "carbon_tip": get_co2_tips(total_co2),
-    })
+
+    return jsonify(
+        {
+            "total_receipts": total_receipts,
+            "total_spent": round(total_spent, 2),
+            "total_co2": round(total_co2, 2),
+            "category_breakdown": category_totals,
+            "monthly_stats": [dict(r) for r in monthly_rows],
+            "carbon_tip": get_co2_tips(total_co2),
+        }
+    )
 
 
 @bp.get("/api/receipts")
@@ -116,7 +129,6 @@ def create_receipt():
     except ValueError:
         return jsonify({"error": "amount must be a valid number"}), 400
 
-    # Calculate CO2
     co2_kg = calculate_co2(amount, category)
 
     file_path = None
@@ -191,11 +203,10 @@ def delete_receipt(receipt_id: int):
 
 @bp.post("/api/settings/language")
 def set_language():
-    """Set language preference via cookie."""
     lang = request.json.get("language", "en")
     if lang not in ["en", "de"]:
         return jsonify({"error": "unsupported language"}), 400
-    
+
     response = make_response(jsonify({"status": "ok"}))
     response.set_cookie("language", lang, max_age=31536000, samesite="Lax")
     return response
@@ -203,10 +214,5 @@ def set_language():
 
 @bp.get("/api/settings")
 def get_settings():
-    """Get current settings."""
     lang = request.cookies.get("language", "en")
-    return jsonify({
-        "language": lang,
-        "currency": "EUR",
-    })
-
+    return jsonify({"language": lang, "currency": "EUR"})
