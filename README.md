@@ -51,7 +51,7 @@ Receipt vault and digital receipt storage MVP.
 4. Open in your browser:
 
 	 ```
-	 http://127.0.0.1:5000
+	 http://127.0.0.1:5001
 	 ```
 
 ## Test on iPhone (Apple mobile)
@@ -72,14 +72,30 @@ Receipt vault and digital receipt storage MVP.
 4. On your iPhone Safari, open:
 
 	```
-	http://<YOUR_LOCAL_IP>:5000
+	http://<YOUR_LOCAL_IP>:5001
 	```
 
-Example: `http://192.168.1.23:5000`
+Example: `http://192.168.1.23:5001`
+
+### Port conflict on macOS
+
+If you see "Port 5000 is in use by another program", do one of:
+
+1. **Disable AirPlay Receiver** (recommended to use port 5000):
+   - System Settings → General → AirDrop & Handoff
+   - Turn off "AirPlay Receiver"
+   - Edit [run.py](run.py) and change port back to 5000
+   - Run `python run.py` again
+   - Then use `http://<ip>:5000` on phone
+
+2. **Keep using port 5001** (default already set):
+   - No changes needed; just run `python run.py`
+   - The server starts on port 5001 automatically
+   - Use `http://<ip>:5001` on phone
 
 If it does not load:
 - Confirm both devices are on the same network.
-- Temporarily allow inbound port `5000` in your firewall.
+- Temporarily allow inbound port `5001` in your firewall (or `5000` if you disabled AirPlay).
 - Keep the terminal running while testing.
 
 The SQLite DB is created automatically at `instance/receipts.sqlite3`.
