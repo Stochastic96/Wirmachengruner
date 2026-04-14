@@ -27,13 +27,16 @@ def create_app() -> Flask:
     # Initialize Babel for i18n
     babel = Babel(app)
 
-    @babel.localeselector
+    # Define locale selector
     def get_locale():
-        # Check request args first, then session, then browser preference
+        # Check request args first, then cookie, then browser preference
         lang = request.args.get("lang") or request.cookies.get("language", None)
         if lang in ["de", "en"]:
             return lang
         return request.accept_languages.best_match(["de", "en"]) or "en"
+
+    # Register locale selector
+    babel.init_app(app, locale_selector=get_locale)
 
     app.teardown_appcontext(close_db)
     app.register_blueprint(bp)
