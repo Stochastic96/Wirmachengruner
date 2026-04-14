@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Receipt Vault",
+    "slug": "receipt-vault-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.stochastic96.receiptvault"
+    },
+    "android": {},
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

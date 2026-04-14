@@ -79,6 +79,50 @@
 	 http://127.0.0.1:5000
 	 ```
 
+## Real iPhone app (Expo)
+
+This repository now includes a real mobile app shell in `mobile-app/`.
+
+### 1) Start backend API on your Mac
+
+```bash
+python run.py
+```
+
+If port conflict:
+
+```bash
+PORT=5002 python run.py
+```
+
+### 2) Start mobile app
+
+```bash
+cd mobile-app
+npm install
+cp .env.example .env
+```
+
+Edit `.env` and set your Mac LAN IP (and port), for example:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=http://192.168.0.101:5001
+```
+
+Then run:
+
+```bash
+npm run start
+```
+
+### 3) Open on iPhone
+
+1. Install **Expo Go** from the App Store.
+2. Ensure iPhone and Mac are on the same Wi-Fi.
+3. Scan the QR code shown by Expo in terminal/browser.
+
+You will get a real mobile app experience (native shell) on iPhone.
+
 ## Features explained
 
 ### Dashboard
