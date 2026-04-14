@@ -1,0 +1,95 @@
+# Receipt Vault - English Translations
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+
+msgid "Receipt Vault"
+msgstr "Receipt Vault"
+
+msgid "Upload, search, and manage digital receipts in one place."
+msgstr "Upload, search, and manage digital receipts in one place."
+
+msgid "Add Receipt"
+msgstr "Add Receipt"
+
+msgid "Vendor"
+msgstr "Vendor"
+
+msgid "Amount"
+msgstr "Amount"
+
+msgid "Currency"
+msgstr "Currency"
+
+msgid "Purchase Date"
+msgstr "Purchase Date"
+
+msgid "Category"
+msgstr "Category"
+
+msgid "Attachment"
+msgstr "Attachment"
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "Save Receipt"
+msgstr "Save Receipt"
+
+msgid "Receipts"
+msgstr "Receipts"
+
+msgid "Search vendor, notes, category"
+msgstr "Search vendor, notes, category"
+
+msgid "Filter category"
+msgstr "Filter category"
+
+msgid "Refresh"
+msgstr "Refresh"
+
+msgid "No receipts found."
+msgstr "No receipts found."
+
+msgid "Download"
+msgstr "Download"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Home"
+msgstr "Home"
+
+msgid "Profiles"
+msgstr "Profiles"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Settings"
+msgstr "Settings"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "Total Receipts"
+msgstr "Total Receipts"
+
+msgid "Total Spent"
+msgstr "Total Spent"
+
+msgid "CO2 Emissions"
+msgstr "CO2 Emissions"
+
+msgid "kg CO2"
+msgstr "kg CO2"
+
+msgid "Category Breakdown"
+msgstr "Category Breakdown"
+
+msgid "Monthly Stats"
+msgstr "Monthly Stats"
+
+msgid "Carbon Footprint Tips"
+msgstr "Carbon Footprint Tips"

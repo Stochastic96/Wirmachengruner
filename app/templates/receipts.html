@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block page_title %}Receipts{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h2>Manage Receipts</h2>
+
+  <!-- Add Receipt Form -->
+  <form id="receipt-form" enctype="multipart/form-data" style="margin-bottom: 2rem;">
+    <div class="grid">
+      <div class="form-group">
+        <label for="vendor">Vendor *</label>
+        <input id="vendor" name="vendor" type="text" required />
+      </div>
+      <div class="form-group">
+        <label for="amount">Amount *</label>
+        <input id="amount" name="amount" type="number" step="0.01" min="0" required />
+      </div>
+      <div class="form-group">
+        <label for="currency">Currency</label>
+        <input id="currency" name="currency" type="text" maxlength="3" value="EUR" />
+      </div>
+      <div class="form-group">
+        <label for="purchase_date">Purchase Date</label>
+        <input id="purchase_date" name="purchase_date" type="date" />
+      </div>
+      <div class="form-group">
+        <label for="category">Category</label>
+        <select id="category" name="category">
+          <option value="">Select category...</option>
+          <option value="food">🍔 Food</option>
+          <option value="transport">🚗 Transport</option>
+          <option value="office">🏢 Office</option>
+          <option value="shopping">🛍️ Shopping</option>
+          <option value="accommodation">🏨 Accommodation</option>
+          <option value="entertainment">🎬 Entertainment</option>
+          <option value="utilities">💡 Utilities</option>
+          <option value="healthcare">⚕️ Healthcare</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="file">Attachment (Image/PDF)</label>
+        <input id="file" name="file" type="file" accept="image/*,.pdf" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" rows="2" placeholder="Optional details"></textarea>
+    </div>
+    <button type="submit" class="btn-primary">💾 Save Receipt</button>
+    <div id="form-message" class="message"></div>
+  </form>
+</div>
+
+<!-- Receipts List -->
+<div class="panel">
+  <h2>Your Receipts</h2>
+  <div class="toolbar">
+    <input id="search-input" class="search-input" type="search" placeholder="Search vendor, notes, category" />
+    <select id="category-filter">
+      <option value="">All categories</option>
+      <option value="food">🍔 Food</option>
+      <option value="transport">🚗 Transport</option>
+      <option value="office">🏢 Office</option>
+      <option value="shopping">🛍️ Shopping</option>
+      <option value="accommodation">🏨 Accommodation</option>
+      <option value="entertainment">🎬 Entertainment</option>
+      <option value="utilities">💡 Utilities</option>
+      <option value="healthcare">⚕️ Healthcare</option>
+    </select>
+    <button type="button" class="btn-secondary" id="refresh-btn">🔄 Refresh</button>
+  </div>
+  <div id="receipts-list"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const form = document.getElementById('receipt-form');
+const formMessage = document.getElementById('form-message');
+const list = document.getElementById('receipts-list');
+const searchInput = document.getElementById('search-input');
+const categoryFilter = document.getElementById('category-filter');
+const refreshBtn = document.getElementById('refresh-btn');
+
+async function fetchReceipts() {
+  const params = new URLSearchParams();
+  const q = searchInput.value.trim();
+  const category = categoryFilter.value.trim();
+
+  if (q) params.set('q', q);
+  if (category) params.set('category', category);
+
+  const response = await fetch(`/api/receipts?${params.toString()}`);
+  if (!response.ok) throw new Error('Failed to load receipts');
+  return response.json();
+}
+
+function formatAmount(amount, currency) {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: (currency || 'EUR').toUpperCase(),
+    }).format(amount);
+  } catch {
+    return `${amount} ${currency || 'EUR'}`;
+  }
+}
+
+function renderReceipts(receipts) {
+  list.innerHTML = '';
+
+  if (!receipts.length) {
+    list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No receipts found.</p>';
+    return;
+  }
+
+  for (const receipt of receipts) {
+    const item = document.createElement('div');
+    item.className = 'receipt-item';
+
+    const category = receipt.category ? ` • ${receipt.category.toUpperCase()}` : '';
+    const purchaseDate = receipt.purchase_date || 'No date';
+    const co2 = receipt.co2_kg ? `${receipt.co2_kg.toFixed(1)} kg CO2` : 'N/A';
+
+    item.innerHTML = `
+      <div class="receipt-info">
+        <p class="receipt-vendor">${receipt.vendor}</p>
+        <p class="receipt-meta">${formatAmount(receipt.amount, receipt.currency)} • ${purchaseDate}${category}</p>
+        <p class="receipt-meta">${receipt.notes || 'No notes'}</p>
+      </div>
+      <div style="text-align: right; display: flex; gap: 0.5rem; flex-direction: column; align-items: flex-end;">
+        <div class="receipt-co2">🌍 ${co2}</div>
+        <div class="receipt-actions">
+          ${receipt.file_path ? `<button type="button" class="btn-secondary" data-download="${receipt.id}">📥</button>` : ''}
+          <button type="button" class="btn-danger" data-delete="${receipt.id}">🗑️</button>
+        </div>
+      </div>
+    `;
+
+    list.appendChild(item);
+  }
+}
+
+async function refresh() {
+  try {
+    const receipts = await fetchReceipts();
+    renderReceipts(receipts);
+  } catch (error) {
+    list.innerHTML = `<p style="color: var(--danger);">${error.message}</p>`;
+  }
+}
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  formMessage.textContent = 'Saving...';
+  formMessage.classList.add('show', 'info');
+
+  const body = new FormData(form);
+  const response = await fetch('/api/receipts', { method: 'POST', body });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({ error: 'Failed to save' }));
+    formMessage.textContent = payload.error || 'Failed to save';
+    formMessage.classList.remove('info');
+    formMessage.classList.add('error');
+    return;
+  }
+
+  form.reset();
+  formMessage.textContent = '✓ Saved successfully!';
+  formMessage.classList.remove('error');
+  formMessage.classList.add('success');
+  setTimeout(() => formMessage.classList.remove('show'), 2000);
+  refresh();
+});
+
+list.addEventListener('click', async (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement)) return;
+
+  const deleteId = target.getAttribute('data-delete');
+  if (deleteId) {
+    const response = await fetch(`/api/receipts/${deleteId}`, { method: 'DELETE' });
+    if (response.ok) refresh();
+    return;
+  }
+
+  const downloadId = target.getAttribute('data-download');
+  if (downloadId) {
+    window.location.href = `/api/receipts/${downloadId}/file`;
+  }
+});
+
+searchInput.addEventListener('input', refresh);
+categoryFilter.addEventListener('change', refresh);
+refreshBtn.addEventListener('click', refresh);
+
+refresh();
+</script>
+{% endblock %}

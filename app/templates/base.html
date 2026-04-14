@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Receipt Vault{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <h1>🌱 Receipt Vault</h1>
+      <nav>
+        <ul>
+          <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">📊 Dashboard</a></li>
+          <li><a href="/receipts" class="{% if request.path == '/receipts' %}active{% endif %}">📄 Receipts</a></li>
+          <li><a href="/settings" class="{% if request.path == '/settings' %}active{% endif %}">⚙️ Settings</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <h2>{% block page_title %}{% endblock %}</h2>
+      </div>
+      <div class="header-actions">
+        <button class="lang-toggle" id="lang-toggle">🌐 EN</button>
+        <div class="co2-badge">
+          <span id="co2-badge-text">🌍 0 kg CO2</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <div class="container">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='i18n.js') }}"></script>
+    <script src="{{ url_for('static', filename='common.js') }}"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

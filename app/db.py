@@ -29,10 +29,21 @@ def init_db() -> None:
             purchase_date TEXT,
             category TEXT,
             notes TEXT,
+            co2_kg REAL,
             original_filename TEXT,
             mime_type TEXT,
             file_path TEXT,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            language TEXT NOT NULL DEFAULT 'en',
+            currency TEXT NOT NULL DEFAULT 'EUR',
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
         """
     )

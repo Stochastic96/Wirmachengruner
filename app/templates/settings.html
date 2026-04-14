@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h2>Profile Settings</h2>
+  
+  <div class="form-group">
+    <label>Language Preference</label>
+    <div style="display: flex; gap: 0.5rem;">
+      <button type="button" class="lang-btn btn-secondary" data-lang="en">🇬🇧 English</button>
+      <button type="button" class="lang-btn btn-secondary" data-lang="de">🇩🇪 Deutsch</button>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Currency</label>
+    <select id="currency-select">
+      <option value="EUR">€ EUR (Euro)</option>
+      <option value="USD">$ USD (US Dollar)</option>
+      <option value="GBP">£ GBP (British Pound)</option>
+      <option value="CHF">₣ CHF (Swiss Franc)</option>
+    </select>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>About</h2>
+  <p>🌱 <strong>Receipt Vault</strong> helps you manage digital receipts and track your carbon footprint.</p>
+  <p>All receipts are stored locally on your device. No data is shared with third parties.</p>
+  <p style="color: var(--text-muted); font-size: 0.9rem;">Version 1.0 • Built with Flask & ❤️ for sustainable consumption</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const lang = btn.getAttribute('data-lang');
+    const response = await fetch('/api/settings/language', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: lang }),
+    });
+    
+    if (response.ok) {
+      // Update UI language by reloading
+      window.location.reload();
+    }
+  });
+});
+</script>
+{% endblock %}

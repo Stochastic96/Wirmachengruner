@@ -1,7 +1,10 @@
 from pathlib import Path
+from datetime import datetime, timedelta
 
-from flask import Blueprint, current_app, jsonify, render_template, request, send_file
+from flask import Blueprint, current_app, jsonify, render_template, request, send_file, make_response
+from flask_babel import gettext
 
+from .co2 import calculate_co2, get_co2_tips
 from .db import execute, fetch_all, fetch_one
 from .storage import delete_file_if_exists, save_uploaded_file
 
@@ -13,6 +16,58 @@ def index():
     return render_template("index.html")
 
 
+@bp.get("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+
+@bp.get("/receipts")
+def receipts_page():
+    return render_template("receipts.html")
+
+
+@bp.get("/settings")
+def settings_page():
+    return render_template("settings.html")
+
+
+@bp.get("/api/stats")
+def get_stats():
+    """Get overview statistics including CO2 totals."""
+    rows = fetch_all("SELECT amount, currency, category, co2_kg FROM receipts")
+    
+    total_receipts = len(rows)
+    total_spent = sum(r["amount"] for r in rows)
+    total_co2 = sum(r["co2_kg"] or 0 for r in rows)
+    
+    # Category breakdown
+    category_totals = {}
+    for row in rows:
+        cat = row["category"] or "Uncategorized"
+        if cat not in category_totals:
+            category_totals[cat] = {"count": 0, "amount": 0, "co2": 0}
+        category_totals[cat]["count"] += 1
+        category_totals[cat]["amount"] += row["amount"]
+        category_totals[cat]["co2"] += row["co2_kg"] or 0
+    
+    # Monthly totals (last 6 months)
+    six_months_ago = (datetime.now() - timedelta(days=180)).isoformat()
+    monthly_rows = fetch_all(
+        "SELECT strftime('%Y-%m', created_at) as month, SUM(amount) as total, SUM(co2_kg) as co2 "
+        "FROM receipts WHERE created_at > ? GROUP BY month ORDER BY month DESC LIMIT 6",
+        (six_months_ago,)
+    )
+    
+    return jsonify({
+        "total_receipts": total_receipts,
+        "total_spent": round(total_spent, 2),
+        "total_co2": round(total_co2, 2),
+        "category_breakdown": category_totals,
+        "monthly_stats": [dict(r) for r in monthly_rows],
+        "carbon_tip": get_co2_tips(total_co2),
+    })
+
+
 @bp.get("/api/receipts")
 def list_receipts():
     q = (request.args.get("q") or "").strip().lower()
@@ -21,7 +76,7 @@ def list_receipts():
     rows = fetch_all(
         """
         SELECT id, vendor, amount, currency, purchase_date, category, notes,
-               original_filename, mime_type, file_path, created_at
+               co2_kg, original_filename, mime_type, file_path, created_at
         FROM receipts
         ORDER BY datetime(created_at) DESC, id DESC
         """
@@ -48,7 +103,7 @@ def list_receipts():
 def create_receipt():
     vendor = (request.form.get("vendor") or "").strip()
     amount_raw = (request.form.get("amount") or "").strip()
-    currency = (request.form.get("currency") or "USD").strip().upper()
+    currency = (request.form.get("currency") or "EUR").strip().upper()
     purchase_date = (request.form.get("purchase_date") or "").strip() or None
     category = (request.form.get("category") or "").strip() or None
     notes = (request.form.get("notes") or "").strip() or None
@@ -60,6 +115,9 @@ def create_receipt():
         amount = float(amount_raw)
     except ValueError:
         return jsonify({"error": "amount must be a valid number"}), 400
+
+    # Calculate CO2
+    co2_kg = calculate_co2(amount, category)
 
     file_path = None
     original_filename = None
@@ -76,8 +134,8 @@ def create_receipt():
         """
         INSERT INTO receipts (
             vendor, amount, currency, purchase_date, category, notes,
-            original_filename, mime_type, file_path
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            co2_kg, original_filename, mime_type, file_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             vendor,
@@ -86,6 +144,7 @@ def create_receipt():
             purchase_date,
             category,
             notes,
+            co2_kg,
             original_filename,
             mime_type,
             file_path,
@@ -95,7 +154,7 @@ def create_receipt():
     created = fetch_one(
         """
         SELECT id, vendor, amount, currency, purchase_date, category, notes,
-               original_filename, mime_type, file_path, created_at
+               co2_kg, original_filename, mime_type, file_path, created_at
         FROM receipts
         WHERE id = ?
         """,
@@ -128,3 +187,26 @@ def delete_receipt(receipt_id: int):
     delete_file_if_exists(row["file_path"])
 
     return jsonify({"status": "deleted", "id": receipt_id})
+
+
+@bp.post("/api/settings/language")
+def set_language():
+    """Set language preference via cookie."""
+    lang = request.json.get("language", "en")
+    if lang not in ["en", "de"]:
+        return jsonify({"error": "unsupported language"}), 400
+    
+    response = make_response(jsonify({"status": "ok"}))
+    response.set_cookie("language", lang, max_age=31536000, samesite="Lax")
+    return response
+
+
+@bp.get("/api/settings")
+def get_settings():
+    """Get current settings."""
+    lang = request.cookies.get("language", "en")
+    return jsonify({
+        "language": lang,
+        "currency": "EUR",
+    })
+
