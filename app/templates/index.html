@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Receipt Vault</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <h1>Receipt Vault</h1>
+        <p>Upload, search, and manage digital receipts in one place.</p>
+      </header>
+
+      <section class="panel">
+        <h2>Add Receipt</h2>
+        <form id="receipt-form" enctype="multipart/form-data">
+          <div class="grid">
+            <label>
+              Vendor
+              <input name="vendor" type="text" required />
+            </label>
+            <label>
+              Amount
+              <input name="amount" type="number" step="0.01" min="0" required />
+            </label>
+            <label>
+              Currency
+              <input name="currency" type="text" maxlength="3" value="USD" />
+            </label>
+            <label>
+              Purchase Date
+              <input name="purchase_date" type="date" />
+            </label>
+            <label>
+              Category
+              <input name="category" type="text" placeholder="Travel, Office, Meals..." />
+            </label>
+            <label>
+              Attachment
+              <input name="file" type="file" accept="image/*,.pdf" />
+            </label>
+          </div>
+          <label>
+            Notes
+            <textarea name="notes" rows="3" placeholder="Optional details"></textarea>
+          </label>
+          <button type="submit">Save Receipt</button>
+          <p id="form-message" class="message"></p>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Receipts</h2>
+        <div class="toolbar">
+          <input id="search-input" type="search" placeholder="Search vendor, notes, category" />
+          <input id="category-input" type="text" placeholder="Filter category" />
+          <button id="refresh-btn" type="button">Refresh</button>
+        </div>
+        <div id="receipts-list" class="list"></div>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
